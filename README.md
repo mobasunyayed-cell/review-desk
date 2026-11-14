@@ -23,11 +23,17 @@ Open http://127.0.0.1:8000/docs for the interactive API documentation. The datab
 | POST | `/tasks` | Add an AI response to review (title, prompt, ai_response) |
 | GET | `/tasks` | List tasks, filter by `status`, paginate with `limit` and `offset` |
 | GET | `/tasks/{id}` | One task |
+| POST | `/rubrics` | Create a rubric with weighted criteria (each with a max score) |
+| GET | `/rubrics`, `/rubrics/{id}` | List or fetch rubrics |
+| POST | `/tasks/{id}/reviews` | Score a task against a rubric |
+| GET | `/tasks/{id}/reviews` | All reviews of a task |
+
+A review must score every criterion of its rubric exactly once, within each criterion's maximum. The `total` is a weighted average from 0 to 1, with every score first scaled to its own maximum. A reviewer can review a task only once, and a task becomes `reviewed` after its first review.
 
 ## Roadmap
 
 - [x] Project scaffold, tasks API, tests, CI
-- [ ] Rubrics and reviews with weighted scores
+- [x] Rubrics and reviews with weighted scores
 - [ ] Reviewer accounts and authentication
 - [ ] Inter-reviewer agreement (Cohen's kappa via medeval)
 - [ ] Alembic migrations, PostgreSQL, Docker Compose
