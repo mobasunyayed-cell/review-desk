@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -76,7 +77,6 @@ class ReviewCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     rubric_id: int
-    reviewer: str = Field(min_length=1, max_length=100)
     scores: list[ScoreIn] = Field(min_length=1)
     comment: str = Field(default="", max_length=2000)
 
@@ -99,3 +99,42 @@ class ReviewOut(BaseModel):
     created_at: datetime
     total: float
     scores: list[ScoreOut]
+
+
+_USERNAME = re.compile(r"^[a-z0-9_.-]{3,50}$")
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str = Field(min_length=10, max_length=128)
+
+    @field_validator("username")
+    @classmethod
+    def clean_username(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not _USERNAME.fullmatch(value):
+            raise ValueError("username must be 3 to 50 characters: letters, digits, _ . -")
+        return value
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    created_at: datetime
+
+
+class LoginIn(BaseModel):
+    username: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("username")
+    @classmethod
+    def normalise(cls, value: str) -> str:
+        return value.strip().lower()
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

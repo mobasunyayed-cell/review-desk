@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
-from review_desk.api.deps import SessionDep
+from review_desk.api.deps import CurrentUser, SessionDep, current_user
 from review_desk.models import Review, ReviewScore, Rubric, Task, TaskStatus
 from review_desk.schemas import ReviewCreate, ReviewOut
 
-router = APIRouter(prefix="/tasks/{task_id}/reviews", tags=["reviews"])
+router = APIRouter(
+    prefix="/tasks/{task_id}/reviews", tags=["reviews"], dependencies=[Depends(current_user)]
+)
 
 
 def _unprocessable(detail: str) -> HTTPException:
@@ -17,7 +19,9 @@ def _unprocessable(detail: str) -> HTTPException:
 
 
 @router.post("", response_model=ReviewOut, status_code=status.HTTP_201_CREATED)
-def create_review(task_id: int, payload: ReviewCreate, session: SessionDep) -> Review:
+def create_review(
+    task_id: int, payload: ReviewCreate, session: SessionDep, user: CurrentUser
+) -> Review:
     task = session.get(Task, task_id)
     if task is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "task not found")
@@ -41,7 +45,7 @@ def create_review(task_id: int, payload: ReviewCreate, session: SessionDep) -> R
             raise _unprocessable(f"score {item.score} exceeds the maximum {limit}")
 
     duplicate = session.scalar(
-        select(Review.id).where(Review.task_id == task_id, Review.reviewer == payload.reviewer)
+        select(Review.id).where(Review.task_id == task_id, Review.reviewer == user.username)
     )
     if duplicate is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "this reviewer already reviewed the task")
@@ -49,7 +53,7 @@ def create_review(task_id: int, payload: ReviewCreate, session: SessionDep) -> R
     review = Review(
         task_id=task_id,
         rubric_id=rubric.id,
-        reviewer=payload.reviewer,
+        reviewer=user.username,
         comment=payload.comment,
         scores=[ReviewScore(criterion_id=s.criterion_id, score=s.score) for s in payload.scores],
     )
