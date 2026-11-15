@@ -24,3 +24,38 @@ jobs:
           ruff format --check .
       - run: mypy
       - run: pytest --cov=review_desk --cov-fail-under=90
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create a throwaway .env
+        run: |
+          echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
+          echo "REVIEW_DESK_SECRET_KEY=$(openssl rand -hex 32)" >> .env
+      - name: Start PostgreSQL and the API
+        run: docker compose up -d --build
+      - name: Wait for /health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health; then exit 0; fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - name: Register, log in and create a task against PostgreSQL
+        run: |
+          curl -fsS -X POST localhost:8000/auth/register -H 'content-type: application/json' \
+            -d '{"username":"smoke-test","password":"a long smoke passphrase"}'
+          TOKEN=$(curl -fsS -X POST localhost:8000/auth/login -H 'content-type: application/json' \
+            -d '{"username":"smoke-test","password":"a long smoke passphrase"}' \
+            | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+          curl -fsS -X POST localhost:8000/tasks -H "Authorization: Bearer $TOKEN" \
+            -H 'content-type: application/json' \
+            -d '{"title":"t","prompt":"p","ai_response":"r"}'
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down -v
