@@ -15,6 +15,26 @@ uvicorn review_desk.main:create_app --factory --reload
 
 Open http://127.0.0.1:8000/docs for the interactive API documentation. The database defaults to a local SQLite file; set `REVIEW_DESK_DATABASE_URL` to change it.
 
+## Run with Docker and PostgreSQL
+
+```bash
+cp .env.example .env       # then edit both values
+docker compose up --build
+```
+
+The API starts on http://localhost:8000 after applying the database migrations. Data lives in the `pgdata` volume; `docker compose down -v` deletes it.
+
+## Database migrations
+
+The schema is managed with Alembic. For anything beyond local experiments, turn off automatic table creation (`REVIEW_DESK_AUTO_CREATE_TABLES=false`) and run:
+
+```bash
+alembic upgrade head                              # apply migrations
+alembic revision --autogenerate -m "describe it"  # after changing models.py
+```
+
+A test applies every migration to an empty database and fails if the result differs from the models, so a forgotten migration cannot reach `main`.
+
 ## Authentication
 
 Every endpoint except `/health`, `/auth/register` and `/auth/login` needs a bearer token.
@@ -34,7 +54,8 @@ In the interactive docs use the **Authorize** button and paste the token. Passwo
 | `REVIEW_DESK_SECRET_KEY` | random per start | Signs tokens. **Set it in any real deployment**, otherwise tokens stop working on restart. |
 | `REVIEW_DESK_TOKEN_MINUTES` | `60` | Token lifetime |
 | `REVIEW_DESK_ALLOW_REGISTRATION` | `true` | Set `false` to close sign-up once your reviewers exist |
-| `REVIEW_DESK_DATABASE_URL` | local SQLite file | Database |
+| `REVIEW_DESK_DATABASE_URL` | local SQLite file | Database (use `postgresql+psycopg://...` for PostgreSQL) |
+| `REVIEW_DESK_AUTO_CREATE_TABLES` | `true` | Create tables on start. Set `false` when you run migrations |
 
 Known limits for now: no rate limiting on login and no password reset.
 
@@ -67,7 +88,7 @@ A review must score every criterion of its rubric exactly once, within each crit
 - [x] Rubrics and reviews with weighted scores
 - [x] Reviewer accounts and authentication
 - [x] Inter-reviewer agreement (Cohen's kappa via medeval)
-- [ ] Alembic migrations, PostgreSQL, Docker Compose
+- [x] Alembic migrations, PostgreSQL, Docker Compose
 - [ ] Export of results
 
 ## Development

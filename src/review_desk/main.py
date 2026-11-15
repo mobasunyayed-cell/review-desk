@@ -19,6 +19,7 @@ def create_app(
     secret_key: str | None = None,
     token_minutes: int | None = None,
     allow_registration: bool | None = None,
+    create_tables: bool | None = None,
 ) -> FastAPI:
     """Build the app. Tests pass an in-memory database URL and a fixed secret.
 
@@ -29,7 +30,9 @@ def create_app(
     """
     settings = get_settings()
     engine = make_engine(database_url or settings.database_url)
-    Base.metadata.create_all(engine)  # replaced by Alembic migrations in a later step
+    if settings.auto_create_tables if create_tables is None else create_tables:
+        # Convenient for development and tests. Deployments run `alembic upgrade head` instead.
+        Base.metadata.create_all(engine)
 
     app = FastAPI(title="review-desk", version=__version__)
     app.state.engine = engine
