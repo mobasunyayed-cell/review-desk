@@ -1,5 +1,5 @@
 # Build stage: git is needed only to fetch medeval from its GitHub tag.
-FROM python:3.12-slim AS build
+FROM python:3.15-slim AS build
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
@@ -8,7 +8,7 @@ COPY src ./src
 RUN pip wheel --no-cache-dir --wheel-dir /wheels ".[postgres]"
 
 # Runtime stage: no git, no build tools, non-root user.
-FROM python:3.12-slim
+FROM python:3.15-slim
 RUN useradd --create-home --uid 1000 app
 WORKDIR /app
 COPY --from=build /wheels /wheels
