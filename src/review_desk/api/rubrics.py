@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
-from review_desk.api.deps import SessionDep
+from review_desk.api.deps import SessionDep, current_user
 from review_desk.models import Criterion, Rubric
 from review_desk.schemas import RubricCreate, RubricOut
 
-router = APIRouter(prefix="/rubrics", tags=["rubrics"])
+router = APIRouter(prefix="/rubrics", tags=["rubrics"], dependencies=[Depends(current_user)])
 
 
 @router.post("", response_model=RubricOut, status_code=status.HTTP_201_CREATED)

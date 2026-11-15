@@ -15,11 +15,37 @@ uvicorn review_desk.main:create_app --factory --reload
 
 Open http://127.0.0.1:8000/docs for the interactive API documentation. The database defaults to a local SQLite file; set `REVIEW_DESK_DATABASE_URL` to change it.
 
+## Authentication
+
+Every endpoint except `/health`, `/auth/register` and `/auth/login` needs a bearer token.
+
+```bash
+curl -X POST localhost:8000/auth/register -H 'content-type: application/json' \
+  -d '{"username": "dr-ahmed", "password": "a long passphrase"}'
+curl -X POST localhost:8000/auth/login -H 'content-type: application/json' \
+  -d '{"username": "dr-ahmed", "password": "a long passphrase"}'
+# then send:  Authorization: Bearer <access_token>
+```
+
+In the interactive docs use the **Authorize** button and paste the token. Passwords are hashed with scrypt and never returned. A review's reviewer is always the signed-in user, never a field the client can set.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `REVIEW_DESK_SECRET_KEY` | random per start | Signs tokens. **Set it in any real deployment**, otherwise tokens stop working on restart. |
+| `REVIEW_DESK_TOKEN_MINUTES` | `60` | Token lifetime |
+| `REVIEW_DESK_ALLOW_REGISTRATION` | `true` | Set `false` to close sign-up once your reviewers exist |
+| `REVIEW_DESK_DATABASE_URL` | local SQLite file | Database |
+
+Known limits for now: no rate limiting on login and no password reset.
+
 ## API so far
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | Liveness and version |
+| GET | `/health` | Liveness and version (public) |
+| POST | `/auth/register` | Create an account |
+| POST | `/auth/login` | Get an access token |
+| GET | `/auth/me` | The signed-in user |
 | POST | `/tasks` | Add an AI response to review (title, prompt, ai_response) |
 | GET | `/tasks` | List tasks, filter by `status`, paginate with `limit` and `offset` |
 | GET | `/tasks/{id}` | One task |
@@ -34,7 +60,7 @@ A review must score every criterion of its rubric exactly once, within each crit
 
 - [x] Project scaffold, tasks API, tests, CI
 - [x] Rubrics and reviews with weighted scores
-- [ ] Reviewer accounts and authentication
+- [x] Reviewer accounts and authentication
 - [ ] Inter-reviewer agreement (Cohen's kappa via medeval)
 - [ ] Alembic migrations, PostgreSQL, Docker Compose
 - [ ] Export of results

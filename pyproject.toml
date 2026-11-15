@@ -12,6 +12,7 @@ license = { text = "MIT" }
 authors = [{ name = "Mohamed Basuny Abdo" }]
 dependencies = [
     "fastapi>=0.110",
+    "pyjwt>=2.8",
     "sqlalchemy>=2.0",
     "uvicorn>=0.29",
 ]

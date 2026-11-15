@@ -97,3 +97,12 @@ class ReviewScore(Base):
     criterion_id: Mapped[int] = mapped_column(ForeignKey("criteria.id"), primary_key=True)
     score: Mapped[int]
     criterion: Mapped[Criterion] = relationship(lazy="selectin")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=_now)

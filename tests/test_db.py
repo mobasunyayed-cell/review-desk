@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.orm import Session
 
+from conftest import SECRET, sign_in
 from review_desk.db import make_engine
 from review_desk.main import create_app
 from review_desk.models import Task
@@ -14,13 +15,15 @@ from review_desk.models import Task
 def test_file_database_persists_between_app_instances(tmp_path):
     url = f"sqlite:///{tmp_path / 'desk.db'}"
     payload = {"title": "t", "prompt": "p", "ai_response": "r"}
-    first = create_app(url)
+    first = create_app(url, secret_key=SECRET)
     with TestClient(first) as client:
+        client.headers.update(sign_in(client, "dr-a"))
         assert client.post("/tasks", json=payload).status_code == 201
     first.state.engine.dispose()
 
-    second = create_app(url)
+    second = create_app(url, secret_key=SECRET)
     with TestClient(second) as client:
+        client.headers.update(sign_in(client, "dr-a"))  # the user survived the restart
         assert len(client.get("/tasks").json()) == 1
     second.state.engine.dispose()
 

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 
-from review_desk.api.deps import SessionDep
+from review_desk.api.deps import SessionDep, current_user
 from review_desk.models import Task, TaskStatus
 from review_desk.schemas import TaskCreate, TaskOut
 
-router = APIRouter(prefix="/tasks", tags=["tasks"])
+router = APIRouter(prefix="/tasks", tags=["tasks"], dependencies=[Depends(current_user)])
 
 
 @router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
