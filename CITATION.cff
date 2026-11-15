@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "review-desk: a small API for rubric-based review of AI answers"
+type: software
+version: 0.1.0
+date-released: 2026-11-15
+license: MIT
+repository-code: "https://github.com/mobasunyayed-cell/review-desk"
+authors:
+  - family-names: Abdo
+    given-names: Mohamed Basuny

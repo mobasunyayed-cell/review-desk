@@ -111,6 +111,10 @@ pytest --cov=review_desk
 
 Built with help from Claude (Anthropic) for code and guidance. I run the tests and I am responsible for the project.
 
+## Project health
+
+CI runs lint, strict typing and tests on Python 3.10 to 3.12 (90% coverage gate) plus a Docker Compose job that boots the API against PostgreSQL. CodeQL scans weekly and on every pull request, Dependabot keeps dependencies and the base image current, and pushing a `v*` tag publishes a GitHub release after checking the tag matches the package version. See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
