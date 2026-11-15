@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 
+from review_desk.agreement import reviewer_agreement
 from review_desk.api.deps import SessionDep, current_user
 from review_desk.models import Criterion, Rubric
-from review_desk.schemas import RubricCreate, RubricOut
+from review_desk.schemas import AgreementOut, RubricCreate, RubricOut
 
 router = APIRouter(prefix="/rubrics", tags=["rubrics"], dependencies=[Depends(current_user)])
 
@@ -37,3 +40,20 @@ def get_rubric(rubric_id: int, session: SessionDep) -> Rubric:
     if rubric is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "rubric not found")
     return rubric
+
+
+@router.get("/{rubric_id}/agreement", response_model=AgreementOut)
+def get_agreement(
+    rubric_id: int,
+    session: SessionDep,
+    reviewer_a: Annotated[str, Query(min_length=1, max_length=100)],
+    reviewer_b: Annotated[str, Query(min_length=1, max_length=100)],
+) -> AgreementOut:
+    """Cohen's kappa between two reviewers for each criterion of a rubric."""
+    first, second = reviewer_a.strip().lower(), reviewer_b.strip().lower()
+    if first == second:
+        raise HTTPException(422, "choose two different reviewers")
+    rubric = session.get(Rubric, rubric_id)
+    if rubric is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "rubric not found")
+    return reviewer_agreement(session, rubric, first, second)

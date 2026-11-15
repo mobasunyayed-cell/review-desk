@@ -12,6 +12,7 @@ license = { text = "MIT" }
 authors = [{ name = "Mohamed Basuny Abdo" }]
 dependencies = [
     "fastapi>=0.110",
+    "medeval @ git+https://github.com/mobasunyayed-cell/medeval@v0.2.0",
     "pyjwt>=2.8",
     "sqlalchemy>=2.0",
     "uvicorn>=0.29",
@@ -39,3 +40,7 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 python_version = "3.10"
 strict = true
 files = ["src/review_desk"]
+
+[[tool.mypy.overrides]]
+module = "medeval.*"
+ignore_missing_imports = true  # medeval does not ship a py.typed marker yet
