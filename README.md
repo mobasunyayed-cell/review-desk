@@ -53,6 +53,11 @@ Known limits for now: no rate limiting on login and no password reset.
 | GET | `/rubrics`, `/rubrics/{id}` | List or fetch rubrics |
 | POST | `/tasks/{id}/reviews` | Score a task against a rubric |
 | GET | `/tasks/{id}/reviews` | All reviews of a task |
+| GET | `/rubrics/{id}/agreement?reviewer_a=&reviewer_b=` | Cohen's kappa between two reviewers, per criterion |
+
+### Reviewer agreement
+
+Two reviewers who score the same responses should agree more than chance. The agreement endpoint takes the tasks both reviewers scored and computes a quadratic-weighted Cohen's kappa for each criterion, using the statistics from [medeval](https://github.com/mobasunyayed-cell/medeval). Weighting matters because scores are ordered: a one-point disagreement costs much less than a four-point one. Kappa is `null` when there are no shared tasks or when a reviewer gives every response the same score, because it is mathematically undefined there. Treat kappa from a handful of tasks with caution.
 
 A review must score every criterion of its rubric exactly once, within each criterion's maximum. The `total` is a weighted average from 0 to 1, with every score first scaled to its own maximum. A reviewer can review a task only once, and a task becomes `reviewed` after its first review.
 
@@ -61,7 +66,7 @@ A review must score every criterion of its rubric exactly once, within each crit
 - [x] Project scaffold, tasks API, tests, CI
 - [x] Rubrics and reviews with weighted scores
 - [x] Reviewer accounts and authentication
-- [ ] Inter-reviewer agreement (Cohen's kappa via medeval)
+- [x] Inter-reviewer agreement (Cohen's kappa via medeval)
 - [ ] Alembic migrations, PostgreSQL, Docker Compose
 - [ ] Export of results
 

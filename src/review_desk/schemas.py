@@ -138,3 +138,20 @@ class LoginIn(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class CriterionAgreement(BaseModel):
+    criterion_id: int
+    name: str
+    kappa: float | None
+    interpretation: str
+    exact_agreement: float | None
+
+
+class AgreementOut(BaseModel):
+    rubric_id: int
+    reviewer_a: str
+    reviewer_b: str
+    shared_tasks: int
+    mean_kappa: float | None
+    criteria: list[CriterionAgreement]
