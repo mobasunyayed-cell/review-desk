@@ -76,6 +76,14 @@ Known limits for now: no rate limiting on login and no password reset.
 | GET | `/tasks/{id}/reviews` | All reviews of a task |
 | GET | `/rubrics/{id}/agreement?reviewer_a=&reviewer_b=` | Cohen's kappa between two reviewers, per criterion |
 
+### Exporting results
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/rubrics/1/export?format=csv" -o reviews.csv
+```
+
+`format` is `json` (default) or `csv`. One row per review, with a column for each criterion, the weighted `total` (0 to 1) and the comment. Text that starts with `=`, `+`, `-` or `@` is prefixed with an apostrophe so a malicious comment cannot run as a formula when the file is opened in Excel or Sheets.
+
 ### Reviewer agreement
 
 Two reviewers who score the same responses should agree more than chance. The agreement endpoint takes the tasks both reviewers scored and computes a quadratic-weighted Cohen's kappa for each criterion, using the statistics from [medeval](https://github.com/mobasunyayed-cell/medeval). Weighting matters because scores are ordered: a one-point disagreement costs much less than a four-point one. Kappa is `null` when there are no shared tasks or when a reviewer gives every response the same score, because it is mathematically undefined there. Treat kappa from a handful of tasks with caution.
@@ -89,7 +97,7 @@ A review must score every criterion of its rubric exactly once, within each crit
 - [x] Reviewer accounts and authentication
 - [x] Inter-reviewer agreement (Cohen's kappa via medeval)
 - [x] Alembic migrations, PostgreSQL, Docker Compose
-- [ ] Export of results
+- [x] Export of results (CSV and JSON)
 
 ## Development
 

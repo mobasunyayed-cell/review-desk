@@ -12,7 +12,7 @@ FROM python:3.12-slim
 RUN useradd --create-home --uid 1000 app
 WORKDIR /app
 COPY --from=build /wheels /wheels
-RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+RUN pip install --no-cache-dir --no-index --no-deps /wheels/*.whl && pip check && rm -rf /wheels
 COPY alembic.ini ./
 COPY migrations ./migrations
 USER app

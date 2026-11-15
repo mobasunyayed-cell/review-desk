@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 
 from review_desk.agreement import reviewer_agreement
 from review_desk.api.deps import SessionDep, current_user
+from review_desk.export import export_rows, to_csv
 from review_desk.models import Criterion, Rubric
 from review_desk.schemas import AgreementOut, RubricCreate, RubricOut
 
@@ -57,3 +58,23 @@ def get_agreement(
     if rubric is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "rubric not found")
     return reviewer_agreement(session, rubric, first, second)
+
+
+@router.get("/{rubric_id}/export", response_model=None)
+def export_reviews(
+    rubric_id: int,
+    session: SessionDep,
+    format: Literal["csv", "json"] = "json",  # noqa: A002 - public query parameter name
+) -> Response | list[dict[str, Any]]:
+    """Every review of this rubric as flat rows, for spreadsheets or further analysis."""
+    rubric = session.get(Rubric, rubric_id)
+    if rubric is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "rubric not found")
+    rows = export_rows(session, rubric)
+    if format == "json":
+        return rows
+    return Response(
+        to_csv(rubric, rows),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="rubric-{rubric_id}-reviews.csv"'},
+    )

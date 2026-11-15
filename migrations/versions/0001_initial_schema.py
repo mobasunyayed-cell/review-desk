@@ -52,7 +52,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("rubric_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
-        sa.Column("weight", sa.Double(), nullable=False),
+        sa.Column("weight", sa.Float(), nullable=False),
         sa.Column("max_score", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["rubric_id"], ["rubrics.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
