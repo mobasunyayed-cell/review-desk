@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Enum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Enum, Float, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from review_desk.db import Base, UTCDateTime
@@ -59,7 +59,7 @@ class Criterion(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     rubric_id: Mapped[int] = mapped_column(ForeignKey("rubrics.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(100))
-    weight: Mapped[float]
+    weight: Mapped[float] = mapped_column(Float)
     max_score: Mapped[int]
     rubric: Mapped[Rubric] = relationship(back_populates="criteria")
 
